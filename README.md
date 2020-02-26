@@ -17,4 +17,5 @@ Coming soon...
 ## Resources
 
 ![systemd-detect-virt source code](https://github.com/systemd/systemd/blob/master/src/basic/virt.c)
+
 ![Malware evasion techniques](https://www.deepinstinct.com/2019/10/29/malware-evasion-techniques-part-2-anti-vm-blog/)

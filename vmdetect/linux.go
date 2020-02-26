@@ -1,85 +1,72 @@
-// +build linux darwin
+// +build linux
 
 package vmdetect
 
 import (
 	"bytes"
-	"fmt"
+	"os"
 	"os/exec"
-	"os/user"
 )
 
 /*
-	Checks if the program is being run using root.
- */
-func isRunningWithAdminRights() (bool, error) {
-	if currentUser, err := user.Current(); err != nil {
-		return false, err
-	} else {
-		return currentUser.Uid == "0", nil
-	}
-}
-
-/*
-	Tries to vmdetect VM using privileged access.
- */
-func privilegedChecks() (bool, string, error) {
-
+	Checks if the DMI table contains vendor strings of known VMs.
+*/
+func checkDMITable() bool {
+	// TODO : instead of running a command, read files in /sys/class/dmi/id/* and look for vendor strings below
 	output, err := exec.Command("dmidecode").Output()
 
-	if err == nil &&
-		(bytes.Contains(output, []byte("innotek")) ||
+	if err != nil {
+		PrintError(err)
+		return false
+	}
+
+	return bytes.Contains(output, []byte("innotek")) ||
 		bytes.Contains(output, []byte("VirtualBox")) ||
-		bytes.Contains(output, []byte("vbox"))){
-		return true, "dmidecode", nil
-	}
-
-	output, err = exec.Command("dmesg").Output()
-
-	if err == nil && bytes.Contains(output, []byte("Hypervisor detected")) {
-		return true, "dmesg", nil
-	}
-
-	return false, "", nil
+		bytes.Contains(output, []byte("vbox"))
 }
 
 /*
-	Tries to vmdetect VM using unprivileged access.
- */
-func unprivilegedChecks() (bool, string, error) {
-	output, err := exec.Command("hostnamectl").Output()
+	Checks printk messages to see if Linux detected an hypervisor.
+*/
+func checkKernelRingBuffer() bool {
 
-	if err == nil && bytes.Contains(output, []byte(" vm\n")) {
-		return true, "hostnamectl", nil
+	file, err := os.Open("/dev/kmsg")
+
+	if err != nil {
+		PrintError(err)
+		return false
 	}
 
-	return false, "", nil
+	buffer := make([]byte, 1024*8)
+
+	// Only reads the first 100 lines (reading character device in Go is annoying)
+	for i := 0; i < 100; i++ {
+		if _, err = file.Read(buffer); err != nil {
+			PrintError(err)
+			return false
+		}
+
+		if bytes.Contains(buffer, []byte("Hypervisor detected")) {
+			return true
+		}
+	}
+
+	return false
 }
 
 /*
 	Public function returning true if a VM is detected.
 	If so, a non-empty string is also returned to tell how it was detected.
- */
-func IsRunningInVirtualMachine() (bool, string, error) {
-	isAdmin, err := isRunningWithAdminRights()
+*/
+func IsRunningInVirtualMachine() (bool, string) {
 
-	if err != nil {
-		return false, "", err
+	if checkDMITable() {
+		return true, "DMI Table"
 	}
 
-	if isAdmin {
-		vmDetected, reason, err := privilegedChecks()
-
-		if err != nil {
-			return false, "", err
-		}
-
-		if vmDetected {
-			return true, reason, nil
-		}
-	} else {
-		fmt.Println("[WARNING] Running as unprivileged user")
+	if checkKernelRingBuffer() {
+		return true, "Kernel Ring Buffer"
 	}
 
-	return unprivilegedChecks()
+	return false, "nothing"
 }
