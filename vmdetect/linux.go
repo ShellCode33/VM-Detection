@@ -5,8 +5,8 @@ package vmdetect
 import (
 	"bufio"
 	"bytes"
+	"io/ioutil"
 	"os"
-	"os/exec"
 	"time"
 )
 
@@ -14,21 +14,49 @@ import (
 	Checks if the DMI table contains vendor strings of known VMs.
 */
 func checkDMITable() bool {
-	// TODO : instead of running a command, read files in /sys/class/dmi/id/* and look for vendor strings below
-	output, err := exec.Command("dmidecode").Output()
+
+	//  /!\ All lowercase /!\
+	blacklistDMI := []string{
+		"innotek",
+		"virtualbox",
+		"vbox",
+	}
+
+	dmiPath := "/sys/class/dmi/id/"
+	dmiFiles, err := ioutil.ReadDir(dmiPath)
 
 	if err != nil {
 		PrintError(err)
 		return false
 	}
 
-	return bytes.Contains(output, []byte("innotek")) ||
-		bytes.Contains(output, []byte("VirtualBox")) ||
-		bytes.Contains(output, []byte("vbox"))
+	for _, dmiEntry := range dmiFiles {
+		if !dmiEntry.Mode().IsRegular() {
+			continue
+		}
+
+		dmiContent, err := ioutil.ReadFile(dmiPath + dmiEntry.Name())
+
+		if err != nil {
+			PrintError(err)
+			continue
+		}
+
+		for _, entry := range blacklistDMI {
+			// Lowercase comparison to prevent false negatives
+			if bytes.Contains(bytes.ToLower(dmiContent), []byte(entry)) {
+				return true
+			}
+		}
+
+	}
+
+	return false
 }
 
 /*
 	Checks printk messages to see if Linux detected an hypervisor.
+	https://github.com/torvalds/linux/blob/31cc088a4f5d83481c6f5041bd6eb06115b974af/arch/x86/kernel/cpu/hypervisor.c#L79
 */
 func checkKernelRingBuffer() bool {
 
@@ -51,20 +79,20 @@ func checkKernelRingBuffer() bool {
 
 	for {
 		line, _, err := reader.ReadLine()
+
 		if err != nil {
-			if ! os.IsTimeout(err) {
+			if !os.IsTimeout(err) {
 				PrintError(err)
 			}
 
 			return false
 		}
 
-		if bytes.Contains(line, []byte("Hypervisor detected")) {
+		// Lowercase comparison to prevent false negatives
+		if bytes.Contains(bytes.ToLower(line), []byte("hypervisor detected")) {
 			return true
 		}
 	}
-
-	return false
 }
 
 /*
