@@ -3,9 +3,11 @@
 package vmdetect
 
 import (
+	"bufio"
 	"bytes"
 	"os"
 	"os/exec"
+	"time"
 )
 
 /*
@@ -37,16 +39,27 @@ func checkKernelRingBuffer() bool {
 		return false
 	}
 
-	buffer := make([]byte, 1024*8)
+	defer file.Close()
 
-	// Only reads the first 100 lines (reading character device in Go is annoying)
-	for i := 0; i < 100; i++ {
-		if _, err = file.Read(buffer); err != nil {
-			PrintError(err)
+	// Set a read timeout because otherwise reading kmsg (which is a character device) will block
+	if err = file.SetReadDeadline(time.Now().Add(time.Second)); err != nil {
+		PrintError(err)
+		return false
+	}
+
+	reader := bufio.NewReader(file)
+
+	for {
+		line, _, err := reader.ReadLine()
+		if err != nil {
+			if ! os.IsTimeout(err) {
+				PrintError(err)
+			}
+
 			return false
 		}
 
-		if bytes.Contains(buffer, []byte("Hypervisor detected")) {
+		if bytes.Contains(line, []byte("Hypervisor detected")) {
 			return true
 		}
 	}
