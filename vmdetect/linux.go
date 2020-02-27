@@ -21,6 +21,15 @@ func checkDMITable() bool {
 		"innotek",
 		"virtualbox",
 		"vbox",
+		"kvm",
+		"qemu",
+		"vmware",
+		"vmw",
+		"oracle",
+		"xen",
+		"bochs",
+		"parallels",
+		"bhyve",
 	}
 
 	dmiPath := "/sys/class/dmi/id/"
