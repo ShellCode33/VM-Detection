@@ -4,6 +4,15 @@ This project is a Go implementation of well-known techniques trying to detect if
 
 Why doing this in Go ? Because there are many C programs already doing this, but none written in pure Go.
 
+## Installation
+
+First download the package
+```
+$ go get github.com/ShellCode33/VM-Detection/vmdetect
+```
+
+Then see ![main.go](https://github.com/ShellCode33/VM-Detection/blob/master/main.go) to see how to use it.
+
 ## GNU/Linux techniques
 
 - Look for known strings in the DMI table (/dev/mem)

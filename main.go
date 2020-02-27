@@ -1,7 +1,7 @@
 package main
 
 import (
-	"VM-Detection/vmdetect"
+	"github.com/ShellCode33/VM-Detection/vmdetect"
 	"fmt"
 )
 
