@@ -5,6 +5,7 @@ package vmdetect
 import (
 	"bufio"
 	"bytes"
+	"github.com/klauspost/cpuid"
 	"io/ioutil"
 	"os"
 	"time"
@@ -100,6 +101,10 @@ func checkKernelRingBuffer() bool {
 	If so, a non-empty string is also returned to tell how it was detected.
 */
 func IsRunningInVirtualMachine() (bool, string) {
+
+	if cpuid.CPU.VM() {
+		return true, "CPU Vendor"
+	}
 
 	if checkDMITable() {
 		return true, "DMI Table"
