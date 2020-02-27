@@ -15,9 +15,9 @@ Then see [main.go](https://github.com/ShellCode33/VM-Detection/blob/master/main.
 
 ## GNU/Linux techniques
 
+- Look for CPU vendor by trying out different assembly instructions ([cpuid](https://github.com/klauspost/cpuid/))
 - Look for known strings in the DMI table (`/sys/class/dmi/id/*`)
 - Look for hints in the kernel ring buffer (`/dev/kmsg`)
-- Look for virtual chassis in systemd configuration
 
 ## Windows techniques
 
