@@ -16,6 +16,16 @@ func PrintWarning(loggee interface{}) {
 	fmt.Printf("[!] %v\n", loggee)
 }
 
+func DoesFileExist(path string) bool {
+	_, err := os.Stat(path)
+
+	if err != nil {
+		PrintError(err)
+	}
+
+	return !os.IsNotExist(err)
+}
+
 func DoesFileContain(file *os.File, stringToBeFound string) bool {
 	reader := bufio.NewReader(file)
 
@@ -24,9 +34,7 @@ func DoesFileContain(file *os.File, stringToBeFound string) bool {
 
 		if err != nil {
 
-			if err == io.EOF {
-				PrintError(file.Name() + " didn't match")
-			} else if !os.IsTimeout(err) {
+			if !os.IsTimeout(err) && err != io.EOF {
 				PrintError(err)
 			}
 

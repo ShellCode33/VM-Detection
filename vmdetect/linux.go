@@ -7,6 +7,7 @@ import (
 	"github.com/klauspost/cpuid"
 	"io/ioutil"
 	"os"
+	"os/user"
 	"time"
 )
 
@@ -122,13 +123,49 @@ func checkSysInfo() bool {
 }
 
 /*
+Some virtualization technologies can be detected using /proc/device-tree
+*/
+func checkDeviceTree() bool {
+	deviceTreeBase := "/proc/device-tree"
+
+	if DoesFileExist(deviceTreeBase + "/hypervisor/compatible") {
+		return true
+	}
+
+	if DoesFileExist(deviceTreeBase + "/fw-cfg") {
+		return true
+	}
+
+	return false
+}
+
+/*
+Some virtualization technologies can be detected using /proc/type
+*/
+func checkHypervisorType() bool {
+	return DoesFileExist("/sys/hypervisor/type")
+}
+
+/*
+Xen can be detected thanks to /proc/xen
+*/
+func checkXenProcFile() bool {
+	return DoesFileExist("/proc/xen")
+}
+
+/*
 Public function returning true if a VM is detected.
 If so, a non-empty string is also returned to tell how it was detected.
 */
 func IsRunningInVirtualMachine() (bool, string) {
 
+	if currentUser, _ := user.Current(); currentUser != nil && currentUser.Uid != "0" {
+		PrintWarning("Unprivileged user detected, some techniques might not work")
+	}
+
+	// https://lwn.net/Articles/301888/
 	if cpuid.CPU.VM() {
-		return true, "CPU Vendor (assembly instructions)"
+		return true, "CPU Vendor (cpuid space)"
 	}
 
 	if checkUML() {
@@ -145,6 +182,18 @@ func IsRunningInVirtualMachine() (bool, string) {
 
 	if checkKernelRingBuffer() {
 		return true, "Kernel Ring Buffer (/dev/kmsg)"
+	}
+
+	if checkDeviceTree() {
+		return true, "VM device tree (/proc/device-tree)"
+	}
+
+	if checkHypervisorType() {
+		return true, "Hypervisor type file (/sys/hypervisor/type)"
+	}
+
+	if checkXenProcFile() {
+		return true, "Xen proc file (/proc/xen)"
 	}
 
 	return false, "nothing"
