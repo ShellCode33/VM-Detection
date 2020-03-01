@@ -153,6 +153,18 @@ func checkXenProcFile() bool {
 	return DoesFileExist("/proc/xen")
 }
 
+func checkKernelModules() bool {
+
+	file, err := os.Open("/proc/modules")
+
+	if err != nil {
+		PrintError(err)
+		return false
+	}
+
+	return DoesFileContain(file, "vboxguest")
+}
+
 /*
 Public function returning true if a VM is detected.
 If so, a non-empty string is also returned to tell how it was detected.
@@ -166,6 +178,10 @@ func IsRunningInVirtualMachine() (bool, string) {
 	// https://lwn.net/Articles/301888/
 	if cpuid.CPU.VM() {
 		return true, "CPU Vendor (cpuid space)"
+	}
+
+	if checkKernelModules() {
+		return true, "Kernel module (/proc/modules)"
 	}
 
 	if checkUML() {

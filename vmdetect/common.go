@@ -26,7 +26,7 @@ func DoesFileExist(path string) bool {
 	return !os.IsNotExist(err)
 }
 
-func DoesFileContain(file *os.File, stringToBeFound string) bool {
+func DoesFileContain(file *os.File, stringsToBeFound ...string) bool {
 	reader := bufio.NewReader(file)
 
 	for {
@@ -41,8 +41,10 @@ func DoesFileContain(file *os.File, stringToBeFound string) bool {
 			return false
 		}
 
-		if strings.Contains(line, stringToBeFound) {
-			return true
+		for _, stringToBeFound := range stringsToBeFound {
+			if strings.Contains(line, stringToBeFound) {
+				return true
+			}
 		}
 	}
 }
