@@ -4,14 +4,22 @@ This project is a Go implementation of well-known techniques trying to detect if
 
 Why doing this in Go ? Because there are many C programs already doing this, but none written in pure Go.
 
+See the [paper](https://github.com/ShellCode33/VM-Detection/blob/master/paper/paper.pdf) for more details.
+
 ## Usage
 
 First download the package
-```
+```bash
 $ go get github.com/ShellCode33/VM-Detection/vmdetect
 ```
 
 Then see [main.go](https://github.com/ShellCode33/VM-Detection/blob/master/main.go) to use it in your own project.
+
+To build the paper, be sure to have Docker installed and run the following command inside the paper directory:
+
+```bash
+$ docker run 
+```
 
 ## GNU/Linux techniques
 
