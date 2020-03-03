@@ -3,6 +3,7 @@ package vmdetect
 import (
 	"bufio"
 	"fmt"
+	"github.com/klauspost/cpuid"
 	"io"
 	"os"
 	"strings"
@@ -47,4 +48,16 @@ func DoesFileContain(file *os.File, stringsToBeFound ...string) bool {
 			}
 		}
 	}
+}
+
+/*
+Tries to detect VMs using cross-platform techniques.
+*/
+func CommonChecks() (bool, string) {
+	// https://lwn.net/Articles/301888/
+	if cpuid.CPU.VM() {
+		return true, "CPU Vendor (cpuid space)"
+	}
+
+	return false, "nothing"
 }

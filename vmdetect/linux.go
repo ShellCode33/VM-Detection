@@ -4,7 +4,6 @@ package vmdetect
 
 import (
 	"bytes"
-	"github.com/klauspost/cpuid"
 	"io/ioutil"
 	"os"
 	"os/user"
@@ -175,9 +174,8 @@ func IsRunningInVirtualMachine() (bool, string) {
 		PrintWarning("Unprivileged user detected, some techniques might not work")
 	}
 
-	// https://lwn.net/Articles/301888/
-	if cpuid.CPU.VM() {
-		return true, "CPU Vendor (cpuid space)"
+	if vmDetected, how := CommonChecks(); vmDetected {
+		return vmDetected, how
 	}
 
 	if checkKernelModules() {
