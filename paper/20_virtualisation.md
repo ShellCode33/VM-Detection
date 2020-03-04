@@ -14,7 +14,7 @@ storage to the networks.
 ## Isolation
 
 This is an old concept on Linux-based systems which has more recently appeared
-on Windows 10 (1803) . It is not really a virtualisation but more of a way of
+on Windows 10 (1803). It is not really a virtualisation but more of a way of
 running a process in an independent environment that we call *context*. The
 isolated process access and system calls are filtered so that it is not aware
 of the host he's running on. This is basically the way containers work (LXC,
