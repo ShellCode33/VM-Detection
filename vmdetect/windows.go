@@ -161,9 +161,9 @@ func checkRegistry() (bool, string) {
 	If so, a non-empty string is also returned to tell how it was detected.
 */
 func IsRunningInVirtualMachine() (bool, string) {
-	/*if vmDetected, how := CommonChecks(); vmDetected {
+	if vmDetected, how := CommonChecks(); vmDetected {
 		return vmDetected, how
-	}*/
+	}
 
 	if vmDetected, registryKey := checkRegistry(); vmDetected {
 		return vmDetected, fmt.Sprintf("Registry key (%v)", registryKey)
