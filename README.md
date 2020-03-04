@@ -1,12 +1,9 @@
 # VM Detection
 
-*What ?* This project is a Go implementation of well-known techniques trying to detect if the program is being run in a virtual machine.
+This project is a Go implementation of well-known techniques trying to detect if the program is being run in a virtual machine.
+There are many C programs already doing this, but none written in pure Go.
 
-*Why ?* Because there are many C programs already doing this, but none written in pure Go.
-
-*How ?* See this [paper](https://github.com/ShellCode33/VM-Detection/blob/master/paper/paper.pdf) for more details.
-
-Please feel free to contribute !
+See this [paper](https://github.com/ShellCode33/VM-Detection/blob/master/paper/paper.pdf) for more details.
 
 ## Usage
 
@@ -45,5 +42,7 @@ $ file main.exe
 ## Credits
 
 Thanks to [@hippwn](https://twitter.com/hippwn) for its contribution
+
 Thanks systemd for being [that awesome](https://github.com/systemd/systemd/blob/master/src/basic/virt.c).
+
 Thanks to CheckPoint's researchers for their [wonderful website](https://evasions.checkpoint.com/)
