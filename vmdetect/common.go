@@ -111,7 +111,7 @@ func CommonChecks() (bool, string) {
 
 	if err != nil {
 		PrintError(err)
-	} else if runtime.NumCPU() < 3 && vmStat.Total < 2048000 {
+	} else if runtime.NumCPU() < 3 && vmStat.Total < 3072000000 {
 		return true, fmt.Sprintf("Low resources detected (%v CPU and %v bytes of RAM", runtime.NumCPU(), vmStat.Total)
 	}
 
