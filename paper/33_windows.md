@@ -2,6 +2,8 @@
 
 ## Windows
 
+### Crawling the Registry Hive
+
 On Windows, most configuration can be done through the *Registry Hive* &ndash;
 some kind of database that contains every configuration option about either the
 operating system itself, or any software that would like to store information
@@ -28,5 +30,24 @@ virtualBoxKeys := []string{
 	`HKLM\SYSTEM\ControlSet001\Services\VBoxService`,
 	`HKLM\SYSTEM\ControlSet001\Services\VBoxSF`,
 	`HKLM\SYSTEM\ControlSet001\Services\VBoxVideo`,
+}
+```
+
+### Looking for known files
+
+Following a similar principle to the registries analysis, we can take a look to
+the file system, searching for particular files. When installed, the 
+aforementioned *guest addons* add some files to the disk. These files are known
+and pretty easy to guess. A lot of malwares will would take a look at these.
+Here is a quick example:
+
+```golang
+vmwarePath := []string{
+    `c:\windows\system32\drivers\vmmouse.sys`,
+    `c:\windows\system32\drivers\vmnet.sys`,
+    `c:\windows\system32\drivers\vmxnet.sys`,
+    `c:\windows\system32\drivers\vmhgfs.sys`,
+    `c:\windows\system32\drivers\vmx86.sys`,
+    `c:\windows\system32\drivers\hgfs.sys`
 }
 ```
