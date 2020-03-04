@@ -3,26 +3,19 @@
 package vmdetect
 
 import (
+	"errors"
 	"fmt"
 	"golang.org/x/sys/windows/registry"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 )
 
-func doesRegistryKeyExist(key string) bool {
-
-	subkeyPrefix := ""
-
-	// Handle trailing wildcard
-	if key[len(key)-1:] == "*" {
-		key, subkeyPrefix = path.Split(key)
-		subkeyPrefix = subkeyPrefix[:len(subkeyPrefix)-1] // remove *
-	}
-
-	firstSeparatorIndex := strings.Index(key, string(os.PathSeparator))
-	keyTypeStr := key[:firstSeparatorIndex]
-	keyPath := key[firstSeparatorIndex+1:]
+func extractKeyTypeFrom(registryKey string) (registry.Key, string, error) {
+	firstSeparatorIndex := strings.Index(registryKey, string(os.PathSeparator))
+	keyTypeStr := registryKey[:firstSeparatorIndex]
+	keyPath := registryKey[firstSeparatorIndex+1:]
 
 	var keyType registry.Key
 	switch keyTypeStr {
@@ -42,14 +35,62 @@ func doesRegistryKeyExist(key string) bool {
 		keyType = registry.CURRENT_CONFIG
 		break
 	default:
-		PrintError(fmt.Sprintf("Invalid keytype (%v)", keyTypeStr))
+		return keyType, "", errors.New(fmt.Sprintf("Invalid keytype (%v)", keyTypeStr))
+	}
+
+	return keyType, keyPath, nil
+}
+
+func doesRegistryKeyContain(registryKey string, expectedSubString string) bool {
+
+	keyType, keyPath, err := extractKeyTypeFrom(registryKey)
+
+	if err != nil {
+		PrintError(err)
+		return false
+	}
+
+	keyPath, keyName := filepath.Split(keyPath)
+
+	keyHandle, err := registry.OpenKey(keyType, keyPath, registry.QUERY_VALUE)
+
+	if err != nil {
+		PrintError(fmt.Sprintf("Cannot open %v : %v", registryKey, err))
+		return false
+	}
+
+	defer keyHandle.Close()
+
+	valueFound, _, err := keyHandle.GetStringValue(keyName)
+
+	if err != nil {
+		PrintError(err)
+	}
+
+	return strings.Contains(valueFound, expectedSubString)
+}
+
+func doesRegistryKeyExist(registryKey string) bool {
+
+	subkeyPrefix := ""
+
+	// Handle trailing wildcard
+	if registryKey[len(registryKey)-1:] == "*" {
+		registryKey, subkeyPrefix = path.Split(registryKey)
+		subkeyPrefix = subkeyPrefix[:len(subkeyPrefix)-1] // remove *
+	}
+
+	keyType, keyPath, err := extractKeyTypeFrom(registryKey)
+
+	if err != nil {
+		PrintError(err)
 		return false
 	}
 
 	keyHandle, err := registry.OpenKey(keyType, keyPath, registry.QUERY_VALUE)
 
 	if err != nil {
-		PrintError(fmt.Sprintf("Cannot open %v : %v", key, err))
+		PrintError(fmt.Sprintf("Cannot open %v : %v", registryKey, err))
 		return false
 	}
 
@@ -73,7 +114,7 @@ func doesRegistryKeyExist(key string) bool {
 
 		return false
 	} else {
-		// The key we were looking for has been found
+		// The registryKey we were looking for has been found
 		return true
 	}
 }
@@ -143,6 +184,35 @@ func checkRegistry() (bool, string) {
 		`HKLM\SYSTEM\ControlSet001\Services\xenvdb`,
 	}
 
+	// TODO : fill with https://evasions.checkpoint.com/techniques/registry.html#check-if-keys-contain-strings
+	blacklistedValuesPerKeyPerVendor := map[string]map[string]string{
+		"Anubis": {
+			`HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\ProductID`:    "76487-337-8429955-22614",
+			`HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProductID`: "76487-337-8429955-22614",
+		},
+		"QEMU": {
+			`HKLM\HARDWARE\DEVICEMAP\Scsi\Scsi Port 0\Scsi Bus 0\Target Id 0\Logical Unit Id 0\Identifier`: "QEMU",
+			`HKLM\HARDWARE\Description\System\SystemBiosVersion`:                                           "QEMU",
+			`HKLM\HARDWARE\Description\System\VideoBiosVersion`:                                            "QEMU",
+			`HKLM\HARDWARE\Description\System\BIOS\SystemManufacturer`:                                     "QEMU",
+		},
+		"VirtualBox": {
+			`HKLM\HARDWARE\DEVICEMAP\Scsi\Scsi Port 0\Scsi Bus 0\Target Id 0\Logical Unit Id 0\Identifier`: "VBOX",
+			`HKLM\HARDWARE\DEVICEMAP\Scsi\Scsi Port 1\Scsi Bus 0\Target Id 0\Logical Unit Id 0\Identifier`: "VBOX",
+			`HKLM\HARDWARE\DEVICEMAP\Scsi\Scsi Port 2\Scsi Bus 0\Target Id 0\Logical Unit Id 0\Identifier`: "VBOX",
+			`HKLM\HARDWARE\Description\System\SystemBiosVersion`:                                           "VBOX",
+			`HKLM\HARDWARE\Description\System\VideoBiosVersion`:                                            "VIRTUALBOX",
+			`HKLM\HARDWARE\Description\System\BIOS\SystemProductName`:                                      "VIRTUAL",
+			`HKLM\SYSTEM\ControlSet001\Services\Disk\Enum\DeviceDesc`:                                      "VBOX",
+			`HKLM\SYSTEM\ControlSet001\Services\Disk\Enum\FriendlyName`:                                    "VBOX",
+			`HKLM\SYSTEM\ControlSet002\Services\Disk\Enum\DeviceDesc`:                                      "VBOX",
+			`HKLM\SYSTEM\ControlSet002\Services\Disk\Enum\FriendlyName`:                                    "VBOX",
+			`HKLM\SYSTEM\ControlSet003\Services\Disk\Enum\DeviceDesc`:                                      "VBOX",
+			`HKLM\SYSTEM\ControlSet003\Services\Disk\Enum\FriendlyName`:                                    "VBOX",
+			`HKLM\SYSTEM\CurrentControlSet\Control\SystemInformation\SystemProductName`:                    "VIRTUAL",
+		},
+	}
+
 	allKeys := [][]string{hyperVKeys, parallelsKeys, virtualBoxKeys, virtualPCKeys, vmwareKeys, xenKeys}
 
 	for _, keys := range allKeys {
@@ -153,17 +223,24 @@ func checkRegistry() (bool, string) {
 		}
 	}
 
+	for /*vendor*/ _, registryValuesPerPath := range blacklistedValuesPerKeyPerVendor {
+		for registryPath, expectedValue := range registryValuesPerPath {
+			if doesRegistryKeyContain(registryPath, expectedValue) {
+				return true, registryPath + " contains " + expectedValue
+			}
+		}
+	}
+
 	return false, "none"
 }
 
-func checkFileSystem() bool {
+func checkFileSystem() (bool, string) {
 	// check for known path on the filesystem, either files or directories
 	generalPath := []string{
 		`c:\take_screenshot.ps1`,
 		`c:\loaddll.exe`,
 		`c:\symbols\aagmmc.pdb`,
 	}
-
 
 	prlPath := []string{
 		`c:\windows\system32\drivers\prleth.sys`,
@@ -201,26 +278,25 @@ func checkFileSystem() bool {
 		`c:\windows\system32\drivers\vmxnet.sys`,
 		`c:\windows\system32\drivers\vmhgfs.sys`,
 		`c:\windows\system32\drivers\vmx86.sys`,
-		`c:\windows\system32\drivers\hgfs.sys`
+		`c:\windows\system32\drivers\hgfs.sys`,
 	}
 
 	virtualpcPath := []string{
 		`c:\windows\system32\drivers\vmsrvc.sys`,
-		`c:\windows\system32\drivers\vpc-s3.sys`
+		`c:\windows\system32\drivers\vpc-s3.sys`,
 	}
 
 	allPath := [][]string{virtualpcPath, prlPath, vmwarePath, vboxPath, generalPath}
 
 	for _, paths := range allPath {
-		for _, path := range paths {
-			if DoesFileExist(path) {
-				return true, path
+		for _, p := range paths {
+			if DoesFileExist(p) {
+				return true, p
 			}
 		}
 	}
 
 	return false, "none"
-	
 }
 
 /*
@@ -236,8 +312,8 @@ func IsRunningInVirtualMachine() (bool, string) {
 		return vmDetected, fmt.Sprintf("Registry key (%v)", registryKey)
 	}
 
-	if vmDetected, path := checkFileSystem(); vmDetected {
-		return vmDetected, fmt.Sprintf("Path (%v)", path)
+	if vmDetected, filePath := checkFileSystem(); vmDetected {
+		return vmDetected, fmt.Sprintf("Known path found (%v)", filePath)
 	}
 
 	return false, "nothing"
