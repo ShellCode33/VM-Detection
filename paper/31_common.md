@@ -37,5 +37,6 @@ any.
 Finally, low resources may be an indication that the operating system is
 running inside a sandbox or virtual machine. It surely cannot be used as the
 only clue but it can lead you to investigate: most sandboxes are ran on the
-laptop of the analyst, who often will give the fewest resources they can. That
-is why we look for resources below 3 vCPUs or 3 GB of RAM.
+laptop of the analyst, who often will give the fewest resources they can. This
+is why we consider machines with low resources (below 3GB of RAM and 3 CPUs) to
+be virtual machines.

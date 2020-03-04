@@ -14,3 +14,7 @@
 - https://en.wikipedia.org/wiki/Desktop_Management_Interface
 - https://github.com/torvalds/linux/blob/31cc088a4f5d83481c6f5041bd6eb06115b974af/arch/x86/kernel/cpu/hypervisor.c
 - https://www.ibm.com/support/knowledgecenter/en/linuxonibm/com.ibm.linux.z.lhdd/lhdd_t_sysinfo.html
+- https://fr.wikipedia.org/wiki/Contr%C3%B4le_d%27acc%C3%A8s_au_support
+- https://lwn.net/Articles/301888/
+- https://evasions.checkpoint.com
+
