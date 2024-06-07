@@ -1,5 +1,9 @@
 # VM Detection
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/ShellCode33/VM-Detection.svg)](https://pkg.go.dev/github.com/ShellCode33/VM-Detection)
+[![GoReportCard](https://goreportcard.com/badge/github.com/ShellCode33/VM-Detection)](https://goreportcard.com/report/github.com/ShellCode33/VM-Detection)
+[![Coverage Status](https://coveralls.io/repos/github/ShellCode33/VM-Detection/badge.svg?branch=master)](https://coveralls.io/github/ShellCode33/VM-Detection?branch=master)
+
 This project is a Go implementation of well-known techniques trying to detect if the program is being run in a virtual machine.
 There are many C programs already doing this, but none written in pure Go.
 
