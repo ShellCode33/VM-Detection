@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/user"
+	"path/filepath"
 	"time"
 )
 
@@ -45,7 +46,7 @@ func checkDMITable() bool {
 			continue
 		}
 
-		dmiContent, err := ioutil.ReadFile(dmiPath + dmiEntry.Name())
+		dmiContent, err := ioutil.ReadFile(filepath.Join(dmiPath, dmiEntry.Name()))
 
 		if err != nil {
 			PrintError(err)
@@ -128,11 +129,11 @@ Some virtualization technologies can be detected using /proc/device-tree
 func checkDeviceTree() bool {
 	deviceTreeBase := "/proc/device-tree"
 
-	if DoesFileExist(deviceTreeBase + "/hypervisor/compatible") {
+	if DoesFileExist(filepath.Join(deviceTreeBase, "/hypervisor/compatible")) {
 		return true
 	}
 
-	if DoesFileExist(deviceTreeBase + "/fw-cfg") {
+	if DoesFileExist(filepath.Join(deviceTreeBase, "/fw-cfg")) {
 		return true
 	}
 
