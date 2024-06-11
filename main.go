@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/ShellCode33/VM-Detection/vmdetect"
 	"fmt"
+	"github.com/ShellCode33/VM-Detection/vmdetect"
 )
 
 func main() {
