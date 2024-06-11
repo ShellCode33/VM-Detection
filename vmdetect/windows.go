@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package vmdetect
@@ -300,8 +301,8 @@ func checkFileSystem() (bool, string) {
 }
 
 /*
-	Public function returning true if a VM is detected.
-	If so, a non-empty string is also returned to tell how it was detected.
+Public function returning true if a VM is detected.
+If so, a non-empty string is also returned to tell how it was detected.
 */
 func IsRunningInVirtualMachine() (bool, string) {
 	if vmDetected, how := CommonChecks(); vmDetected {

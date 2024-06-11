@@ -3,13 +3,14 @@ package vmdetect
 import (
 	"bufio"
 	"fmt"
-	"github.com/klauspost/cpuid"
-	"github.com/shirou/gopsutil/mem"
 	"io"
 	"net"
 	"os"
 	"runtime"
 	"strings"
+
+	"github.com/klauspost/cpuid"
+	"github.com/shirou/gopsutil/mem"
 )
 
 func PrintError(loggee interface{}) {
