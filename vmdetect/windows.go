@@ -123,13 +123,7 @@ func doesRegistryKeyExist(registryKey string) bool {
 func checkRegistry() (bool, string) {
 
 	hyperVKeys := []string{
-		`HKLM\SOFTWARE\Microsoft\Hyper-V`,
-		`HKLM\SOFTWARE\Microsoft\VirtualMachine`,
 		`HKLM\SOFTWARE\Microsoft\Virtual Machine\Guest\Parameters`,
-		`HKLM\SYSTEM\ControlSet001\Services\vmicheartbeat`,
-		`HKLM\SYSTEM\ControlSet001\Services\vmicvss`,
-		`HKLM\SYSTEM\ControlSet001\Services\vmicshutdown`,
-		`HKLM\SYSTEM\ControlSet001\Services\vmicexchange`,
 	}
 
 	parallelsKeys := []string{
